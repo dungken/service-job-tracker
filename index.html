@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản lý Phiếu Công việc</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <header>
+            <h1>🎫 Hệ thống Quản lý Phiếu Công việc</h1>
+            <p>Quản lý công việc dịch vụ và bảo trì hiệu quả</p>
+        </header>
+
+        <!-- NAVIGATION -->
+        <nav>
+            <button class="active" onclick="showTab('create')">📝 Tạo Phiếu</button>
+            <button onclick="showTab('ktv')">🔧 KTV - Xử lý</button>
+            <button onclick="showTab('admin')">📊 Quản lý</button>
+            <button onclick="showTab('export')">💾 Sao lưu</button>
+        </nav>
+
+        <!-- CREATE TICKET SECTION -->
+        <section id="create" class="active">
+            <h2>Tạo Phiếu Công việc Mới</h2>
+            <form id="createTicketForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tên khách hàng <span style="color: red;">*</span></label>
+                        <input type="text" id="customerName" placeholder="Ví dụ: Anh A, Chị B" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Số điện thoại <span style="color: red;">*</span></label>
+                        <input type="tel" id="customerPhone" placeholder="Ví dụ: 0909123456" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Địa chỉ (Tùy chọn)</label>
+                    <input type="text" id="customerAddress" placeholder="Ví dụ: Phòng 302, Tòa A">
+                </div>
+
+                <div class="form-group">
+                    <label>Mô tả vấn đề <span style="color: red;">*</span></label>
+                    <textarea id="issueDescription" placeholder="Ví dụ: Máy lạnh không mát, điều hòa không hoạt động..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Hình ảnh (Tùy chọn)</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="ticketImages" accept="image/*" multiple>
+                        <label for="ticketImages" class="file-input-label">
+                            <span>📷</span>
+                            <span>Chọn hình ảnh</span>
+                        </label>
+                    </div>
+                    <div id="imagePreviewContainer" class="image-preview-container"></div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    ✓ Tạo Phiếu
+                </button>
+            </form>
+        </section>
+
+        <!-- KTV SECTION -->
+        <section id="ktv">
+            <h2>Xử lý Công việc - Kỹ thuật viên</h2>
+            <div class="filters">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label>Lọc theo trạng thái</label>
+                        <select id="ktvStatusFilter" onchange="renderKTVView()">
+                            <option value="all">Tất cả</option>
+                            <option value="Waiting">Chờ xử lý</option>
+                            <option value="In Progress" selected>Đang xử lý</option>
+                            <option value="Completed">Đã hoàn thành</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Lọc theo KTV</label>
+                        <select id="ktvNameFilter" onchange="renderKTVView()">
+                            <option value="all">Tất cả</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="ktvTicketGrid" class="ticket-grid"></div>
+        </section>
+
+        <!-- ADMIN SECTION -->
+        <section id="admin">
+            <h2>Quản lý & Thống kê</h2>
+
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 id="statTotal">0</h3>
+                    <p>Tổng số phiếu</p>
+                </div>
+                <div class="stat-card orange">
+                    <h3 id="statWaiting">0</h3>
+                    <p>Chờ xử lý</p>
+                </div>
+                <div class="stat-card blue">
+                    <h3 id="statInProgress">0</h3>
+                    <p>Đang xử lý</p>
+                </div>
+                <div class="stat-card green">
+                    <h3 id="statCompleted">0</h3>
+                    <p>Đã hoàn thành</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="statRevenue">0đ</h3>
+                    <p>Tổng doanh thu</p>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label>Tìm kiếm</label>
+                        <input type="text" id="adminSearchQuery" placeholder="Tên hoặc SĐT..." onkeyup="renderAdminView()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Trạng thái</label>
+                        <select id="adminStatusFilter" onchange="renderAdminView()">
+                            <option value="all">Tất cả</option>
+                            <option value="Waiting">Chờ xử lý</option>
+                            <option value="In Progress">Đang xử lý</option>
+                            <option value="Completed">Đã hoàn thành</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>KTV</label>
+                        <select id="adminKTVFilter" onchange="renderAdminView()">
+                            <option value="all">Tất cả</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Từ ngày</label>
+                        <input type="date" id="adminDateFrom" onchange="renderAdminView()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Đến ngày</label>
+                        <input type="date" id="adminDateTo" onchange="renderAdminView()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã phiếu</th>
+                            <th>Khách hàng</th>
+                            <th>SĐT</th>
+                            <th>Địa chỉ</th>
+                            <th>Mô tả</th>
+                            <th>Trạng thái</th>
+                            <th>KTV</th>
+                            <th>Thời gian tạo</th>
+                            <th>Hoàn thành</th>
+                            <th>Phí (VNĐ)</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- EXPORT/IMPORT SECTION -->
+        <section id="export">
+            <h2>Sao lưu & Khôi phục Dữ liệu</h2>
+
+            <!-- Important Notice -->
+            <div class="storage-notice">
+                <h3>📌 Lưu ý quan trọng về lưu trữ dữ liệu</h3>
+                <div class="notice-content">
+                    <div class="notice-item">
+                        <span class="notice-icon">⏰</span>
+                        <div class="notice-text">
+                            <strong>Thời gian lưu trữ:</strong>
+                            <p>Dữ liệu được lưu <strong>vĩnh viễn</strong> trên trình duyệt (localStorage) cho đến khi bạn xóa cache/dữ liệu trình duyệt hoặc xóa thủ công trong ứng dụng.</p>
+                        </div>
+                    </div>
+                    <div class="notice-item">
+                        <span class="notice-icon">💾</span>
+                        <div class="notice-text">
+                            <strong>Giới hạn dung lượng:</strong>
+                            <p>Trình duyệt giới hạn <strong>5-10 MB</strong> cho mỗi website. Với hình ảnh base64, bạn có thể lưu khoảng <strong>20-100 phiếu có ảnh</strong>.</p>
+                        </div>
+                    </div>
+                    <div class="notice-item">
+                        <span class="notice-icon">⚠️</span>
+                        <div class="notice-text">
+                            <strong>Khuyến nghị:</strong>
+                            <p>Nên <strong>sao lưu dữ liệu định kỳ</strong> (xuất file JSON) để tránh mất dữ liệu khi xóa cache hoặc đổi thiết bị.</p>
+                        </div>
+                    </div>
+                    <div class="notice-item">
+                        <span class="notice-icon">🔒</span>
+                        <div class="notice-text">
+                            <strong>Bảo mật:</strong>
+                            <p>Dữ liệu chỉ lưu trên <strong>trình duyệt của bạn</strong>, không được đồng bộ lên server. Mỗi trình duyệt/thiết bị có dữ liệu riêng.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Xuất dữ liệu</label>
+                <p style="color: #666; font-size: 14px; margin-bottom: 10px;">
+                    Tải xuống tất cả dữ liệu phiếu công việc dưới dạng file JSON để sao lưu hoặc chuyển sang thiết bị khác.
+                </p>
+                <button class="btn btn-info" onclick="exportData()">
+                    📥 Xuất dữ liệu (JSON)
+                </button>
+            </div>
+
+            <div class="form-group mt-20">
+                <label>Nhập dữ liệu</label>
+                <p style="color: #666; font-size: 14px; margin-bottom: 10px;">
+                    Khôi phục dữ liệu từ file JSON đã xuất. <strong style="color: #dc3545;">Lưu ý:</strong> Thao tác này sẽ ghi đè lên tất cả dữ liệu hiện tại.
+                </p>
+                <div class="file-input-wrapper">
+                    <input type="file" id="importFile" accept=".json" onchange="importData(event)">
+                    <label for="importFile" class="file-input-label">
+                        <span>📤</span>
+                        <span>Chọn file JSON</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group mt-20">
+                <label>Xóa tất cả dữ liệu</label>
+                <p style="color: #666; font-size: 14px; margin-bottom: 10px;">
+                    <strong style="color: #dc3545;">Cảnh báo:</strong> Thao tác này sẽ xóa vĩnh viễn tất cả dữ liệu. Hãy chắc chắn bạn đã sao lưu trước khi thực hiện.
+                </p>
+                <button class="btn btn-danger" onclick="clearAllData()">
+                    🗑️ Xóa tất cả dữ liệu
+                </button>
+            </div>
+
+            <div class="form-group mt-20">
+                <label>Thông tin lưu trữ</label>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                    <p style="margin-bottom: 8px;"><strong>Phiên bản schema:</strong> <span id="schemaVersion">-</span></p>
+                    <p style="margin-bottom: 8px;"><strong>Tổng số phiếu:</strong> <span id="totalTicketsInfo">-</span></p>
+                    <p style="margin-bottom: 0;"><strong>Dung lượng sử dụng:</strong> <span id="storageSize">-</span></p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- TICKET DETAIL MODAL -->
+    <div id="ticketModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Chi tiết Phiếu</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modalBody"></div>
+            </div>
+            <div class="modal-footer" id="modalFooter"></div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script src="app.js"></script>
+</body>
+
+</html>
