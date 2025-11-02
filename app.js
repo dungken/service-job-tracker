@@ -270,27 +270,16 @@ function renderImagePreviews() {
     });
 }
 
-// ==================== TAB NAVIGATION ====================
-function showTab(tabName) {
-    // Update nav buttons
-    document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+// ==================== CREATE TICKET MODAL ====================
+function openCreateTicketModal() {
+    document.getElementById('createTicketModal').classList.add('show');
+}
 
-    // Update sections
-    document.querySelectorAll('section').forEach(section => section.classList.remove('active'));
-    document.getElementById(tabName).classList.add('active');
-
-    // Render views
-    if (tabName === 'ktv') {
-        populateKTVFilters();
-        renderKTVView();
-    } else if (tabName === 'admin') {
-        populateAdminFilters();
-        renderAdminView();
-        renderStatistics();
-    } else if (tabName === 'export') {
-        updateStorageInfo();
-    }
+function closeCreateModal() {
+    document.getElementById('createTicketModal').classList.remove('show');
+    document.getElementById('createTicketForm').reset();
+    pendingImages = [];
+    document.getElementById('imagePreviewContainer').innerHTML = '';
 }
 
 // ==================== CREATE TICKET ====================
@@ -321,93 +310,21 @@ document.getElementById('createTicketForm').addEventListener('submit', function(
     pendingImages = [];
     document.getElementById('imagePreviewContainer').innerHTML = '';
 
+    // Close modal
+    closeCreateModal();
+
+    // Refresh list and stats
+    populateFilters();
+    renderTicketList();
+    renderStatistics();
+
     alert('✓ Đã tạo phiếu công việc thành công!\nMã phiếu: ' + ticket.id);
 });
 
-// ==================== KTV VIEW ====================
+// ==================== TICKET LIST ====================
 const KTV_NAMES = ['Quang', 'Nhựt', 'Nhật', 'Hiếu', 'An'];
 
-function populateKTVFilters() {
-    const select = document.getElementById('ktvNameFilter');
-    const currentValue = select.value;
-    select.innerHTML = '<option value="all">Tất cả</option>';
-    KTV_NAMES.forEach(name => {
-        select.innerHTML += `<option value="${name}">${name}</option>`;
-    });
-    select.value = currentValue;
-}
-
-function renderKTVView() {
-    const tickets = storage.getTickets();
-    const statusFilter = document.getElementById('ktvStatusFilter').value;
-    const ktvFilter = document.getElementById('ktvNameFilter').value;
-
-    let filtered = tickets;
-    if (statusFilter !== 'all') {
-        filtered = filtered.filter(t => t.status === statusFilter);
-    }
-    if (ktvFilter !== 'all') {
-        filtered = filtered.filter(t => t.assignedTo === ktvFilter);
-    }
-
-    // Sort by status priority and date
-    const statusPriority = { 'Waiting': 1, 'In Progress': 2, 'Completed': 3 };
-    filtered.sort((a, b) => {
-        if (statusPriority[a.status] !== statusPriority[b.status]) {
-            return statusPriority[a.status] - statusPriority[b.status];
-        }
-        return new Date(b.createdAt) - new Date(a.createdAt);
-    });
-
-    const container = document.getElementById('ktvTicketGrid');
-
-    if (filtered.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">📋</div>
-                <div class="empty-state-text">Không có phiếu công việc nào</div>
-            </div>
-        `;
-        return;
-    }
-
-    container.innerHTML = filtered.map(ticket => `
-        <div class="ticket-card" onclick="openTicketModal('${ticket.id}')">
-            <div class="ticket-card-header">
-                <div class="ticket-id">${ticket.id}</div>
-                ${getStatusBadge(ticket.status)}
-            </div>
-            <div class="ticket-info">
-                <div class="ticket-info-row">
-                    <span class="ticket-info-label">Khách hàng:</span>
-                    <span class="ticket-info-value">${ticket.name}</span>
-                </div>
-                <div class="ticket-info-row">
-                    <span class="ticket-info-label">SĐT:</span>
-                    <span class="ticket-info-value">${ticket.phone}</span>
-                </div>
-                <div class="ticket-info-row">
-                    <span class="ticket-info-label">Địa chỉ:</span>
-                    <span class="ticket-info-value">${ticket.address || '-'}</span>
-                </div>
-                <div class="ticket-info-row">
-                    <span class="ticket-info-label">KTV:</span>
-                    <span class="ticket-info-value">${ticket.assignedTo || '-'}</span>
-                </div>
-                <div class="ticket-info-row">
-                    <span class="ticket-info-label">Thời gian:</span>
-                    <span class="ticket-info-value">${formatDateTime(ticket.createdAt)}</span>
-                </div>
-            </div>
-            <div class="ticket-description">
-                ${ticket.description}
-            </div>
-        </div>
-    `).join('');
-}
-
-// ==================== ADMIN VIEW ====================
-function populateAdminFilters() {
+function populateFilters() {
     const select = document.getElementById('adminKTVFilter');
     const currentValue = select.value;
     select.innerHTML = '<option value="all">Tất cả</option>';
@@ -417,7 +334,7 @@ function populateAdminFilters() {
     select.value = currentValue;
 }
 
-function renderAdminView() {
+function renderTicketList() {
     const tickets = storage.getTickets();
     const searchQuery = document.getElementById('adminSearchQuery').value.toLowerCase();
     const statusFilter = document.getElementById('adminStatusFilter').value;
@@ -663,14 +580,9 @@ function saveTicketChanges(ticketId) {
     alert('✓ Đã lưu thay đổi thành công!');
     closeModal();
 
-    // Refresh current view
-    const activeSection = document.querySelector('section.active');
-    if (activeSection.id === 'ktv') {
-        renderKTVView();
-    } else if (activeSection.id === 'admin') {
-        renderAdminView();
-        renderStatistics();
-    }
+    // Refresh view
+    renderTicketList();
+    renderStatistics();
 }
 
 function deleteTicket(ticketId) {
@@ -681,7 +593,7 @@ function deleteTicket(ticketId) {
     storage.deleteTicket(ticketId);
     alert('✓ Đã xóa phiếu thành công!');
 
-    renderAdminView();
+    renderTicketList();
     renderStatistics();
 }
 
@@ -719,7 +631,8 @@ function importData(event) {
             if (success) {
                 alert('✓ Đã nhập dữ liệu thành công!');
                 updateStorageInfo();
-                renderAdminView();
+                populateFilters();
+                renderTicketList();
                 renderStatistics();
             } else {
                 alert('❌ Lỗi: File không đúng định dạng!');
@@ -766,13 +679,22 @@ function updateStorageInfo() {
 
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', function() {
-    // Close modal when clicking outside
+    // Close modals when clicking outside
     document.getElementById('ticketModal').addEventListener('click', function(e) {
         if (e.target === this) {
             closeModal();
         }
     });
 
-    // Initialize first view
-    renderKTVView();
+    document.getElementById('createTicketModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeCreateModal();
+        }
+    });
+
+    // Initialize view
+    populateFilters();
+    renderTicketList();
+    renderStatistics();
+    updateStorageInfo();
 });

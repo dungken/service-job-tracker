@@ -16,85 +16,9 @@
             <p>Quản lý công việc dịch vụ và bảo trì hiệu quả</p>
         </header>
 
-        <!-- NAVIGATION -->
-        <nav>
-            <button class="active" onclick="showTab('create')">📝 Tạo Phiếu</button>
-            <button onclick="showTab('ktv')">🔧 KTV - Xử lý</button>
-            <button onclick="showTab('admin')">📊 Quản lý</button>
-            <button onclick="showTab('export')">💾 Sao lưu</button>
-        </nav>
-
-        <!-- CREATE TICKET SECTION -->
-        <section id="create" class="active">
-            <h2>Tạo Phiếu Công việc Mới</h2>
-            <form id="createTicketForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Tên khách hàng <span style="color: red;">*</span></label>
-                        <input type="text" id="customerName" placeholder="Ví dụ: Anh A, Chị B" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Số điện thoại <span style="color: red;">*</span></label>
-                        <input type="tel" id="customerPhone" placeholder="Ví dụ: 0909123456" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Địa chỉ (Tùy chọn)</label>
-                    <input type="text" id="customerAddress" placeholder="Ví dụ: Phòng 302, Tòa A">
-                </div>
-
-                <div class="form-group">
-                    <label>Mô tả vấn đề <span style="color: red;">*</span></label>
-                    <textarea id="issueDescription" placeholder="Ví dụ: Máy lạnh không mát, điều hòa không hoạt động..." required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Hình ảnh (Tùy chọn)</label>
-                    <div class="file-input-wrapper">
-                        <input type="file" id="ticketImages" accept="image/*" multiple>
-                        <label for="ticketImages" class="file-input-label">
-                            <span>📷</span>
-                            <span>Chọn hình ảnh</span>
-                        </label>
-                    </div>
-                    <div id="imagePreviewContainer" class="image-preview-container"></div>
-                </div>
-
-                <button type="submit" class="btn btn-primary">
-                    ✓ Tạo Phiếu
-                </button>
-            </form>
-        </section>
-
-        <!-- KTV SECTION -->
-        <section id="ktv">
-            <h2>Xử lý Công việc - Kỹ thuật viên</h2>
-            <div class="filters">
-                <div class="filters-row">
-                    <div class="filter-group">
-                        <label>Lọc theo trạng thái</label>
-                        <select id="ktvStatusFilter" onchange="renderKTVView()">
-                            <option value="all">Tất cả</option>
-                            <option value="Waiting">Chờ xử lý</option>
-                            <option value="In Progress" selected>Đang xử lý</option>
-                            <option value="Completed">Đã hoàn thành</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Lọc theo KTV</label>
-                        <select id="ktvNameFilter" onchange="renderKTVView()">
-                            <option value="all">Tất cả</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div id="ktvTicketGrid" class="ticket-grid"></div>
-        </section>
-
-        <!-- ADMIN SECTION -->
-        <section id="admin">
-            <h2>Quản lý & Thống kê</h2>
+        <!-- MAIN CONTENT -->
+        <section class="main-content">
+            <h2>Quản lý Phiếu Công việc</h2>
 
             <!-- Statistics -->
             <div class="stats-grid">
@@ -121,15 +45,16 @@
             </div>
 
             <!-- Filters -->
+            <h3 style="margin-top: 30px; margin-bottom: 15px; font-size: 18px; color: #333;">Danh sách Phiếu</h3>
             <div class="filters">
                 <div class="filters-row">
                     <div class="filter-group">
-                        <label>Tìm kiếm</label>
-                        <input type="text" id="adminSearchQuery" placeholder="Tên hoặc SĐT..." onkeyup="renderAdminView()">
+                        <label>🔍 Tìm kiếm</label>
+                        <input type="text" id="adminSearchQuery" placeholder="Tên hoặc SĐT..." onkeyup="renderTicketList()">
                     </div>
                     <div class="filter-group">
                         <label>Trạng thái</label>
-                        <select id="adminStatusFilter" onchange="renderAdminView()">
+                        <select id="adminStatusFilter" onchange="renderTicketList()">
                             <option value="all">Tất cả</option>
                             <option value="Waiting">Chờ xử lý</option>
                             <option value="In Progress">Đang xử lý</option>
@@ -138,17 +63,17 @@
                     </div>
                     <div class="filter-group">
                         <label>KTV</label>
-                        <select id="adminKTVFilter" onchange="renderAdminView()">
+                        <select id="adminKTVFilter" onchange="renderTicketList()">
                             <option value="all">Tất cả</option>
                         </select>
                     </div>
                     <div class="filter-group">
                         <label>Từ ngày</label>
-                        <input type="date" id="adminDateFrom" onchange="renderAdminView()">
+                        <input type="date" id="adminDateFrom" onchange="renderTicketList()">
                     </div>
                     <div class="filter-group">
                         <label>Đến ngày</label>
-                        <input type="date" id="adminDateTo" onchange="renderAdminView()">
+                        <input type="date" id="adminDateTo" onchange="renderTicketList()">
                     </div>
                 </div>
             </div>
@@ -174,11 +99,9 @@
                     <tbody id="adminTableBody"></tbody>
                 </table>
             </div>
-        </section>
 
-        <!-- EXPORT/IMPORT SECTION -->
-        <section id="export">
-            <h2>Sao lưu & Khôi phục Dữ liệu</h2>
+            <!-- Backup Section -->
+            <h3 style="margin-top: 40px; margin-bottom: 15px; font-size: 18px; color: #333;">Sao lưu & Khôi phục</h3>
 
             <!-- Important Notice -->
             <div class="storage-notice">
@@ -258,6 +181,62 @@
                 </div>
             </div>
         </section>
+    </div>
+
+    <!-- FLOATING ADD BUTTON -->
+    <button class="fab" onclick="openCreateTicketModal()" title="Tạo phiếu mới">
+        <span class="fab-icon">+</span>
+    </button>
+
+    <!-- CREATE TICKET MODAL -->
+    <div id="createTicketModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Tạo Phiếu Công việc Mới</h3>
+                <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createTicketForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tên khách hàng <span style="color: red;">*</span></label>
+                            <input type="text" id="customerName" placeholder="Ví dụ: Anh A, Chị B" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Số điện thoại <span style="color: red;">*</span></label>
+                            <input type="tel" id="customerPhone" placeholder="Ví dụ: 0909123456" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Địa chỉ (Tùy chọn)</label>
+                        <input type="text" id="customerAddress" placeholder="Ví dụ: Phòng 302, Tòa A">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mô tả vấn đề <span style="color: red;">*</span></label>
+                        <textarea id="issueDescription" placeholder="Ví dụ: Máy lạnh không mát, điều hòa không hoạt động..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Hình ảnh (Tùy chọn)</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="ticketImages" accept="image/*" multiple>
+                            <label for="ticketImages" class="file-input-label">
+                                <span>📷</span>
+                                <span>Chọn hình ảnh</span>
+                            </label>
+                        </div>
+                        <div id="imagePreviewContainer" class="image-preview-container"></div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">✓ Tạo Phiếu</button>
+                        <button type="button" class="btn btn-danger" onclick="closeCreateModal()">Hủy</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- TICKET DETAIL MODAL -->
